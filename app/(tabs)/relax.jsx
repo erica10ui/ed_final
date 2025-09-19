@@ -178,8 +178,11 @@ export default function Relax() {
       // Stop current sound if playing
       if (sound) {
         try {
-          await sound.stopAsync();
-          await sound.unloadAsync();
+          const status = await sound.getStatusAsync();
+          if (status.isLoaded) {
+            await sound.stopAsync();
+            await sound.unloadAsync();
+          }
         } catch (error) {
           console.error('Error stopping previous sound:', error);
         }
@@ -239,8 +242,11 @@ export default function Relax() {
   const pauseSound = async () => {
     if (sound) {
       try {
-        await sound.pauseAsync();
-        setIsPlaying(false);
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.pauseAsync();
+          setIsPlaying(false);
+        }
       } catch (error) {
         console.error('Error pausing sound:', error);
       }
@@ -250,8 +256,11 @@ export default function Relax() {
   const resumeSound = async () => {
     if (sound) {
       try {
-        await sound.playAsync();
-        setIsPlaying(true);
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.playAsync();
+          setIsPlaying(true);
+        }
       } catch (error) {
         console.error('Error resuming sound:', error);
       }
@@ -261,8 +270,11 @@ export default function Relax() {
   const stopSound = async () => {
     if (sound) {
       try {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        }
       } catch (error) {
         console.error('Error stopping sound:', error);
       }
@@ -1483,12 +1495,12 @@ This is the story of how one woman learned that sometimes the greatest strength 
   // Hidden Object Game Functions
   const initializeHiddenObjectGame = () => {
     const objects = [
-      { id: 1, name: 'Star', x: 20, y: 15, width: 40, height: 40, found: false },
-      { id: 2, name: 'Heart', x: 60, y: 30, width: 35, height: 35, found: false },
-      { id: 3, name: 'Moon', x: 80, y: 10, width: 30, height: 30, found: false },
-      { id: 4, name: 'Sun', x: 10, y: 60, width: 45, height: 45, found: false },
-      { id: 5, name: 'Tree', x: 70, y: 70, width: 50, height: 50, found: false },
-      { id: 6, name: 'Flower', x: 30, y: 80, width: 25, height: 25, found: false },
+      { id: 1, name: 'star', icon: 'star', x: 20, y: 15, width: 40, height: 40, found: false },
+      { id: 2, name: 'Heart', icon: 'heart', x: 60, y: 30, width: 35, height: 35, found: false },
+      { id: 3, name: 'Moon', icon: 'weather-night', x: 80, y: 10, width: 30, height: 30, found: false },
+      { id: 4, name: 'Sun', icon: 'weather-sunny', x: 10, y: 60, width: 45, height: 45, found: false },
+      { id: 5, name: 'Tree', icon: 'tree', x: 70, y: 70, width: 50, height: 50, found: false },
+      { id: 6, name: 'Flower', icon: 'flower', x: 30, y: 80, width: 25, height: 25, found: false },
     ];
     
     // Select 3 random objects to find
@@ -2138,7 +2150,7 @@ This is the story of how one woman learned that sometimes the greatest strength 
                   activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons 
-                    name={obj.name.toLowerCase()} 
+                    name={obj.icon} 
                     size={obj.width * 0.6} 
                     color={obj.found ? "#10B981" : "#8B5CF6"} 
                   />
