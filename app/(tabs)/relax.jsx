@@ -7,7 +7,8 @@ import {
   ScrollView,
   Alert,
   Image,
-  Dimensions
+  Dimensions,
+  TextInput
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
