@@ -7,6 +7,7 @@ import {
   Platform,
   Dimensions,
   Image,
+  ScrollView,
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
@@ -14,14 +15,17 @@ const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function OnboardingSleepMentor() {
-  const handleGetStarted = () => {
-    router.push('/(tabs)/home');
+  const { completeOnboarding } = useAuth();
+  
+  const handleGetStarted = async () => {
+    router.push('/quiz-question-1');
   };
 
   const handleBack = () => {
-    router.back();
+    router.push('/onboarding-sos-relief');
   };
 
   const onGestureEvent = (event) => {
@@ -41,7 +45,11 @@ export default function OnboardingSleepMentor() {
 
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent}>
-      <View style={styles.container}>
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Progress Indicators */}
         <View style={styles.progressContainer}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
@@ -80,7 +88,7 @@ export default function OnboardingSleepMentor() {
             <Text style={styles.getStartedButtonText}>Get Started</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </PanGestureHandler>
   );
 }
@@ -88,9 +96,13 @@ export default function OnboardingSleepMentor() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8D5F2', // Light violet background
+    backgroundColor: '#E8D5F2',
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 40,
   },
   progressContainer: {
     flexDirection: 'row',

@@ -1,11 +1,24 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
 import { router } from 'expo-router';
+import { useSound } from '../contexts/SoundContext';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 export default function Index() {
+  const { playSound } = useSound();
+
+  const handleLogin = () => {
+    playSound('button');
+    router.push('/login');
+  };
+
+  const handleRegister = () => {
+    playSound('button');
+    router.push('/register');
+  };
+
   return (
     <View style={styles.container}>
       <Image 
@@ -17,7 +30,7 @@ export default function Index() {
       <View style={styles.buttonColumn}>
         <TouchableOpacity
           style={[styles.button, styles.loginButton]}
-          onPress={() => router.push('/login')}
+          onPress={handleLogin}
           activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Login</Text>
@@ -25,7 +38,7 @@ export default function Index() {
 
         <TouchableOpacity
           style={[styles.button, styles.registerButton]}
-          onPress={() => router.push('/register')}
+          onPress={handleRegister}
           activeOpacity={0.8}
         >
           <Text style={styles.registerButtonText}>Register</Text>
@@ -38,7 +51,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8D5F2', // Light violet background
+    backgroundColor: '#E8D5F2',
     paddingHorizontal: isWeb ? Math.min(width * 0.1, 50) : 25,
     justifyContent: 'center',
     alignItems: 'center',
@@ -87,10 +100,10 @@ const styles = StyleSheet.create({
     }),
   },
   loginButton: {
-    backgroundColor: '#6366F1', // Professional indigo
+    backgroundColor: '#8B5CF6', // Purple to match logo
     borderWidth: 0,
     // Professional gradient-like effect
-    shadowColor: '#6366F1',
+    shadowColor: '#8B5CF6',
     shadowOffset: {
       width: 0,
       height: isWeb ? 8 : 4,
@@ -102,8 +115,8 @@ const styles = StyleSheet.create({
   registerButton: {
     backgroundColor: '#FFFFFF', // Clean white background
     borderWidth: 2,
-    borderColor: '#6366F1', // Matching the login button color
-    shadowColor: '#6366F1',
+    borderColor: '#8B5CF6', // Purple to match logo
+    shadowColor: '#8B5CF6',
     shadowOffset: {
       width: 0,
       height: isWeb ? 8 : 4,
@@ -120,7 +133,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   registerButtonText: {
-    color: '#6366F1', // Indigo text for white button
+    color: '#8B5CF6', // Purple text for white button
     fontSize: isWeb ? 18 : 16,
     fontWeight: '600',
     letterSpacing: isWeb ? 0.3 : 0,

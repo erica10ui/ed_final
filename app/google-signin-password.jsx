@@ -108,7 +108,7 @@ export default function GoogleSignInPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E8D5F2',
     paddingHorizontal: 24,
     paddingTop: 60,
   },

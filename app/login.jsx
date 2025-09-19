@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -23,17 +24,99 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const { login, googleLogin } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Real-time validation states
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
 
-  const handleLogin = () => {
+  // Real-time email validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError('');
+      setIsEmailValid(false);
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      setIsEmailValid(false);
+      return;
+    }
+    setEmailError('');
+    setIsEmailValid(true);
+  };
+
+  // Real-time password validation
+  const validatePassword = (password) => {
+    if (!password.trim()) {
+      setPasswordError('');
+      setIsPasswordValid(false);
+      return;
+    }
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      setIsPasswordValid(false);
+      return;
+    }
+    setPasswordError('');
+    setIsPasswordValid(true);
+  };
+
+  // Handle email change with real-time validation
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    validateEmail(text);
+  };
+
+  // Handle password change with real-time validation
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    validatePassword(text);
+  };
+
+  const handleLogin = async () => {
     Keyboard.dismiss();
+    
+    // Validate fields
+    validateEmail(email);
+    validatePassword(password);
+    
     if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
-
-    // Fake login success for now
-    Alert.alert('Success', 'Login successful');
-    router.push('/welcomescreen'); // ✅ Navigates to welcome screen
+    
+    if (!isEmailValid || !isPasswordValid) {
+      Alert.alert('Error', 'Please fix the validation errors before logging in');
+      return;
+    }
+    
+    try {
+      setSubmitting(true);
+      const res = await login(email.trim(), password.trim());
+      if (res.success) {
+        Alert.alert('Success', 'Login successful');
+        router.push('/welcomescreen');
+      } else {
+        const errorMessages = {
+          'auth/invalid-credential': 'Wrong password. Please check your password and try again.',
+          'auth/wrong-password': 'Wrong password. Please check your password and try again.',
+          'auth/user-not-found': 'Please register first. No account found with this email.',
+          'auth/too-many-requests': 'Too many attempts. Please try again later.',
+          'auth/network-request-failed': 'Network error. Please check your internet connection.',
+          'auth/invalid-email': 'Please enter a valid email address.'
+        };
+        Alert.alert('Login Failed', errorMessages[res.errorCode] || res.error || 'Invalid credentials');
+      }
+    } catch (e) {
+      Alert.alert('Login Error', e?.message || 'Something went wrong');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -56,42 +139,66 @@ export default function Login() {
         </View>
 
         <View style={styles.formContainer}>
-          <TextInput
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <View style={styles.inputContainer}>
+          <View>
             <TextInput
-              placeholder="Enter your password"
-              secureTextEntry={!passwordVisible}
-              value={password}
-              onChangeText={setPassword}
-              style={styles.passwordInput}
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={handleEmailChange}
+              style={[
+                styles.input,
+                emailError ? styles.inputError : isEmailValid ? styles.inputSuccess : null
+              ]}
+              keyboardType="email-address"
               autoCapitalize="none"
             />
-            <TouchableOpacity
-              onPress={() => setPasswordVisible(!passwordVisible)}
-              style={styles.eyeIcon}
-            >
-              <MaterialCommunityIcons
-                name={passwordVisible ? 'eye-off' : 'eye'}
-                size={24}
-                color="gray"
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          </View>
+
+          <View>
+            <View style={[
+              styles.inputContainer,
+              passwordError ? styles.inputError : isPasswordValid ? styles.inputSuccess : null
+            ]}>
+              <TextInput
+                placeholder="Enter your password"
+                secureTextEntry={!passwordVisible}
+                value={password}
+                onChangeText={handlePasswordChange}
+                style={styles.passwordInput}
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setPasswordVisible(!passwordVisible)}
+                style={styles.eyeIcon}
+              >
+                <MaterialCommunityIcons
+                  name={passwordVisible ? 'eye-off' : 'eye'}
+                  size={24}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
           </View>
 
           <TouchableOpacity onPress={() => router.push('/forgotpassword')} style={styles.forgotContainer}>
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity 
+            style={[
+              styles.loginButton, 
+              (!isEmailValid || !isPasswordValid || submitting) ? styles.loginButtonDisabled : null
+            ]} 
+            onPress={handleLogin} 
+            disabled={!isEmailValid || !isPasswordValid || submitting}
+          >
+            <Text style={[
+              styles.loginButtonText,
+              (!isEmailValid || !isPasswordValid || submitting) ? styles.loginButtonTextDisabled : null
+            ]}>
+              {submitting ? 'Logging in...' : 'Login'}
+            </Text>
           </TouchableOpacity>
 
           <Text style={styles.orText}>or Login with</Text>
@@ -105,7 +212,15 @@ export default function Login() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.socialButton}
-              onPress={() => router.push('/google-signin-email')}
+              onPress={async () => {
+                const res = await googleLogin();
+                if (res.success) {
+                  Alert.alert('Success', 'Logged in with Google');
+                  router.push('/welcomescreen');
+                } else if (res.error) {
+                  Alert.alert('Google Sign-In', res.error);
+                }
+              }}
             >
               <FontAwesome name="google" size={24} color="#DB4437" />
             </TouchableOpacity>
@@ -126,7 +241,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8D5F2', // Light violet background to complement logo
+    backgroundColor: '#E8D5F2',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -287,5 +402,29 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Validation styles
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inputSuccess: {
+    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
+    marginBottom: 8,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  loginButtonTextDisabled: {
+    color: '#6B7280',
   },
 });

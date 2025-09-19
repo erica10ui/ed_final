@@ -48,7 +48,7 @@ export default function FacebookLogin() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E8D5F2',
   },
   header: {
     backgroundColor: '#1877F2',

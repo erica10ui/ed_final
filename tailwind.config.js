@@ -5,7 +5,6 @@ module.exports = {
   theme: {
     extend: {},
   },
-plugins: ['react-native-reanimated/plugin']
-
+  plugins: ['react-native-worklets/plugin']
 }
 

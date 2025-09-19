@@ -1,17 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ScrollView,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
+
+const { width, height } = Dimensions.get('window');
 
 export default function QuizResults() {
   const { answer1, answer2, answer3 } = useLocalSearchParams();
+  const { completeOnboarding } = useAuth();
+  const [confetti, setConfetti] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(true);
 
-  const handleGetStarted = () => {
+  // Generate confetti pieces
+  useEffect(() => {
+    const confettiPieces = [];
+    for (let i = 0; i < 50; i++) {
+      confettiPieces.push({
+        id: i,
+        x: Math.random() * width,
+        y: -50,
+        rotation: Math.random() * 360,
+        color: ['#8B5CF6', '#7C3AED', '#A855F7', '#C084FC', '#DDD6FE'][Math.floor(Math.random() * 5)],
+        size: Math.random() * 8 + 4,
+        speed: Math.random() * 3 + 2,
+      });
+    }
+    setConfetti(confettiPieces);
+
+    // Hide confetti after 3 seconds
+    const timer = setTimeout(() => {
+      setShowConfetti(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleGetStarted = async () => {
+    await completeOnboarding();
     router.push('/(tabs)/home');
   };
 
@@ -23,47 +57,89 @@ export default function QuizResults() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      {/* Results Content */}
-      <View style={styles.content}>
-        {/* Title */}
-        <Text style={styles.title}>You're a Night Owl</Text>
-        
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Here's what can help you sleep better.
-        </Text>
+      {/* Confetti Animation */}
+      {showConfetti && (
+        <View style={styles.confettiContainer}>
+          {confetti.map((piece) => (
+            <Animated.View
+              key={piece.id}
+              style={[
+                styles.confettiPiece,
+                {
+                  left: piece.x,
+                  top: piece.y,
+                  backgroundColor: piece.color,
+                  width: piece.size,
+                  height: piece.size,
+                  transform: [{ rotate: `${piece.rotation}deg` }],
+                },
+              ]}
+            />
+          ))}
+        </View>
+      )}
 
-        {/* Personalized Recommendations */}
-        <View style={styles.recommendationsContainer}>
-          <View style={styles.recommendationItem}>
-            <Text style={styles.recommendationTitle}>🌙 Evening Routine</Text>
-            <Text style={styles.recommendationText}>
-              Create a consistent bedtime routine 1 hour before sleep
-            </Text>
-          </View>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Results Content */}
+        <View style={styles.content}>
+          {/* Title */}
+          <Text style={styles.title}>🎉 You're a Night Owl! 🎉</Text>
+          
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            Here's what can help you sleep better.
+          </Text>
 
-          <View style={styles.recommendationItem}>
-            <Text style={styles.recommendationTitle}>📱 Digital Sunset</Text>
-            <Text style={styles.recommendationText}>
-              Avoid screens 30 minutes before bed to reduce blue light
-            </Text>
-          </View>
+          {/* Personalized Recommendations */}
+          <View style={styles.recommendationsContainer}>
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>🌙 Evening Routine</Text>
+              <Text style={styles.recommendationText}>
+                Create a consistent bedtime routine 1 hour before sleep. This helps signal to your body that it's time to wind down and prepare for rest.
+              </Text>
+            </View>
 
-          <View style={styles.recommendationItem}>
-            <Text style={styles.recommendationTitle}>🧘 Relaxation</Text>
-            <Text style={styles.recommendationText}>
-              Try meditation or gentle stretching to calm your mind
-            </Text>
-          </View>
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>📱 Digital Sunset</Text>
+              <Text style={styles.recommendationText}>
+                Avoid screens 30 minutes before bed to reduce blue light exposure. Consider using blue light filters or reading a book instead.
+              </Text>
+            </View>
 
-          <View style={styles.recommendationItem}>
-            <Text style={styles.recommendationTitle}>🌡️ Environment</Text>
-            <Text style={styles.recommendationText}>
-              Keep your bedroom cool, dark, and quiet for optimal sleep
-            </Text>
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>🧘 Relaxation</Text>
+              <Text style={styles.recommendationText}>
+                Try meditation, deep breathing exercises, or gentle stretching to calm your mind and release tension from the day.
+              </Text>
+            </View>
+
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>🌡️ Environment</Text>
+              <Text style={styles.recommendationText}>
+                Keep your bedroom cool (65-68°F), dark, and quiet for optimal sleep. Consider blackout curtains and white noise if needed.
+              </Text>
+            </View>
+
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>⏰ Consistent Schedule</Text>
+              <Text style={styles.recommendationText}>
+                Go to bed and wake up at the same time every day, even on weekends. This helps regulate your body's internal clock.
+              </Text>
+            </View>
+
+            <View style={styles.recommendationItem}>
+              <Text style={styles.recommendationTitle}>🍵 Evening Drinks</Text>
+              <Text style={styles.recommendationText}>
+                Avoid caffeine after 2 PM and limit alcohol before bed. Try herbal teas like chamomile or valerian root instead.
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
@@ -82,14 +158,32 @@ export default function QuizResults() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
+    backgroundColor: '#E8D5F2',
+  },
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    pointerEvents: 'none',
+  },
+  confettiPiece: {
+    position: 'absolute',
+    borderRadius: 2,
+  },
+  scrollContainer: {
+    flex: 1,
     paddingTop: 60,
   },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+  },
   content: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 20,
   },
   title: {
     fontSize: 32,
@@ -131,7 +225,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
     gap: 16,
   },
   retakeButton: {

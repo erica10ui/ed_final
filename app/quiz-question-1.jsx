@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 
@@ -31,8 +32,16 @@ export default function QuizQuestion1() {
     }
   };
 
+  const handleBack = () => {
+    router.push('/onboarding-sleep-type');
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
       {/* Progress Bar */}
@@ -51,7 +60,7 @@ export default function QuizQuestion1() {
       <View style={styles.answersContainer}>
         {answers.map((answer, index) => (
           <TouchableOpacity
-            key={index}
+            key={`q1-answer-${index}`}
             style={[
               styles.answerButton,
               selectedAnswer === answer && styles.answerButtonSelected
@@ -68,22 +77,32 @@ export default function QuizQuestion1() {
         ))}
       </View>
 
-      {/* Next Button */}
-      {selectedAnswer && (
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Next</Text>
+      {/* Navigation Buttons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-      )}
-    </View>
+        
+        {selectedAnswer && (
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextButtonText}>Next</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E8D5F2',
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 40,
   },
   progressContainer: {
     marginBottom: 40,
@@ -128,11 +147,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8B5CF6',
     fontWeight: '500',
-    textDecorationLine: 'underline',
   },
   answerTextSelected: {
     color: '#7C3AED',
     fontWeight: '600',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  backButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  backButtonText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '500',
   },
   nextButton: {
     backgroundColor: '#8B5CF6',
@@ -140,7 +173,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 40,
   },
   nextButtonText: {
     color: '#fff',

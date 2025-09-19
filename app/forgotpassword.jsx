@@ -39,7 +39,7 @@ export default function ForgotPassword() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#fff' },
+  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#E8D5F2' },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 5, textTransform: 'lowercase' },
   subtitle: { fontSize: 16, color: 'gray', marginBottom: 20, textTransform: 'lowercase' },
   input: {

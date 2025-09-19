@@ -7,6 +7,7 @@ import {
   Platform,
   Dimensions,
   Image,
+  ScrollView,
 } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 
@@ -17,6 +18,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function OnboardingSosRelief() {
   const handleNext = () => {
+    router.push('/onboarding-sleep-mentor');
+  };
+
+  const handleBack = () => {
     router.push('/onboarding-sleep-type');
   };
 
@@ -33,19 +38,23 @@ export default function OnboardingSosRelief() {
         // Swipe left - go to next screen
         handleNext();
       } else if (translationX > threshold) {
-        // Swipe right - go back (but this is first screen, so do nothing)
-        // Could go back to welcome screen if needed
+        // Swipe right - go back to welcome screen
+        handleBack();
       }
     }
   };
 
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent}>
-      <View style={styles.container}>
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Progress Indicators */}
         <View style={styles.progressContainer}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
-          <View style={[styles.progressDot, styles.progressDotInactive]} />
+          <View style={[styles.progressDot, styles.progressDotActive]} />
           <View style={[styles.progressDot, styles.progressDotInactive]} />
         </View>
 
@@ -67,7 +76,7 @@ export default function OnboardingSosRelief() {
         </View>
 
         {/* Swipe Hint */}
-        <Text style={styles.swipeHint}>Swipe left to continue →</Text>
+        <Text style={styles.swipeHint}>← Swipe to navigate →</Text>
 
         {/* Navigation Buttons */}
         <View style={styles.buttonContainer}>
@@ -79,7 +88,7 @@ export default function OnboardingSosRelief() {
             <Text style={styles.nextButtonText}>Next</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </PanGestureHandler>
   );
 }
@@ -87,9 +96,13 @@ export default function OnboardingSosRelief() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8D5F2', // Light violet background
+    backgroundColor: '#E8D5F2',
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 40,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -104,7 +117,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   progressDotActive: {
-    backgroundColor: '#6366F1', // Professional indigo
+    backgroundColor: '#8B5CF6', // Purple to match logo
   },
   progressDotInactive: {
     backgroundColor: '#C4B5FD', // Light purple
@@ -314,7 +327,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   nextButton: {
-    backgroundColor: '#6366F1', // Professional indigo
+    backgroundColor: '#8B5CF6', // Purple to match logo
     paddingVertical: isWeb ? 16 : 12,
     paddingHorizontal: isWeb ? 40 : 32,
     borderRadius: 8,

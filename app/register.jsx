@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, Dimensions, Image, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
+import { useSound } from '../contexts/SoundContext';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
 export default function Register() {
-  const [role, setRole] = useState('');
-  const [schoolId, setSchoolId] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,26 +17,210 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
-    // Check required fields based on role
-    const requiredFields = role === 'student' 
-      ? [role, schoolId, firstName, lastName, email, username, password, confirmPassword]
-      : [role, firstName, lastName, email, username, password, confirmPassword];
-    
-    if (requiredFields.some(field => !field)) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+  // Real-time validation states
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  
+  const [isFirstNameValid, setIsFirstNameValid] = useState(false);
+  const [isLastNameValid, setIsLastNameValid] = useState(false);
+  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isUsernameValid, setIsUsernameValid] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [isConfirmPasswordValid, setIsConfirmPasswordValid] = useState(false);
+
+  const { register, googleLogin } = useAuth();
+  const { playSound } = useSound();
+
+  // Real-time validation functions
+  const validateFirstName = (name) => {
+    if (!name.trim()) {
+      setFirstNameError('');
+      setIsFirstNameValid(false);
+      return;
+    }
+    if (name.trim().length < 2) {
+      setFirstNameError('First name must be at least 2 characters');
+      setIsFirstNameValid(false);
+      return;
+    }
+    setFirstNameError('');
+    setIsFirstNameValid(true);
+  };
+
+  const validateLastName = (name) => {
+    if (!name.trim()) {
+      setLastNameError('');
+      setIsLastNameValid(false);
+      return;
+    }
+    if (name.trim().length < 2) {
+      setLastNameError('Last name must be at least 2 characters');
+      setIsLastNameValid(false);
+      return;
+    }
+    setLastNameError('');
+    setIsLastNameValid(true);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError('');
+      setIsEmailValid(false);
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      setIsEmailValid(false);
+      return;
+    }
+    setEmailError('');
+    setIsEmailValid(true);
+  };
+
+  const validateUsername = (username) => {
+    if (!username.trim()) {
+      setUsernameError('');
+      setIsUsernameValid(false);
+      return;
+    }
+    if (username.trim().length < 3) {
+      setUsernameError('Username must be at least 3 characters');
+      setIsUsernameValid(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameError('Username can only contain letters, numbers, and underscores');
+      setIsUsernameValid(false);
+      return;
+    }
+    setUsernameError('');
+    setIsUsernameValid(true);
+  };
+
+  const validatePassword = (password) => {
+    if (!password.trim()) {
+      setPasswordError('');
+      setIsPasswordValid(false);
+      return;
+    }
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      setIsPasswordValid(false);
+      return;
+    }
+    setPasswordError('');
+    setIsPasswordValid(true);
+  };
+
+  const validateConfirmPassword = (confirmPassword) => {
+    if (!confirmPassword.trim()) {
+      setConfirmPasswordError('');
+      setIsConfirmPasswordValid(false);
+      return;
+    }
+    if (confirmPassword !== password) {
+      setConfirmPasswordError('Passwords do not match');
+      setIsConfirmPasswordValid(false);
+      return;
+    }
+    setConfirmPasswordError('');
+    setIsConfirmPasswordValid(true);
+  };
+
+  // Handle input changes with real-time validation
+  const handleFirstNameChange = (text) => {
+    setFirstName(text);
+    validateFirstName(text);
+  };
+
+  const handleLastNameChange = (text) => {
+    setLastName(text);
+    validateLastName(text);
+  };
+
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    validateEmail(text);
+  };
+
+  const handleUsernameChange = (text) => {
+    setUsername(text);
+    validateUsername(text);
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    validatePassword(text);
+    // Re-validate confirm password when password changes
+    if (confirmPassword) {
+      validateConfirmPassword(confirmPassword);
+    }
+  };
+
+  const handleConfirmPasswordChange = (text) => {
+    setConfirmPassword(text);
+    validateConfirmPassword(text);
+  };
+
+  const handleRegister = async () => {
+    // Validate all fields
+    validateFirstName(firstName);
+    validateLastName(lastName);
+    validateEmail(email);
+    validateUsername(username);
+    validatePassword(password);
+    validateConfirmPassword(confirmPassword);
+
+    // Check if all fields are valid
+    const allFieldsValid = isFirstNameValid && isLastNameValid && isEmailValid && 
+                          isUsernameValid && isPasswordValid && isConfirmPasswordValid;
+
+    if (!allFieldsValid) {
+      playSound('error');
+      Alert.alert('Error', 'Please fix all validation errors before registering');
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
+    setIsLoading(true);
+    playSound('button');
 
-    // Registration logic goes here
-    Alert.alert('Success', 'Account created successfully!');
-    router.replace('/login');
+    try {
+      const result = await register({
+        firstName,
+        lastName,
+        email,
+        username,
+        password
+      });
+
+      if (result.success) {
+        playSound('success');
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => router.replace('/login') }
+        ]);
+      } else {
+        playSound('error');
+        const errorMessages = {
+          'auth/email-already-in-use': 'Email already exists. Please try logging in instead.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/weak-password': 'Password should be at least 6 characters.',
+          'auth/network-request-failed': 'Network error. Please check your internet connection.'
+        };
+        Alert.alert('Registration Failed', errorMessages[result.errorCode] || result.error || 'Registration failed');
+      }
+    } catch (error) {
+      playSound('error');
+      Alert.alert('Error', 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -59,66 +243,140 @@ export default function Register() {
         </View>
 
         <View style={styles.formContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <View style={styles.inputContainer}>
+          {/* First Name */}
+          <View>
             <TextInput
-              placeholder="Password"
-              secureTextEntry={!passwordVisible}
-              value={password}
-              onChangeText={setPassword}
-              style={styles.passwordInput}
-              autoCapitalize="none"
+              style={[
+                styles.input,
+                firstNameError ? styles.inputError : isFirstNameValid ? styles.inputSuccess : null
+              ]}
+              placeholder="First Name"
+              value={firstName}
+              onChangeText={handleFirstNameChange}
+              autoCapitalize="words"
             />
-            <TouchableOpacity
-              onPress={() => setPasswordVisible(!passwordVisible)}
-              style={styles.eyeIcon}
-            >
-              <MaterialCommunityIcons
-                name={passwordVisible ? 'eye-off' : 'eye'}
-                size={24}
-                color="gray"
-              />
-            </TouchableOpacity>
+            {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
           </View>
 
-          <View style={styles.inputContainer}>
+          {/* Last Name */}
+          <View>
             <TextInput
-              placeholder="Confirm password"
-              secureTextEntry={!confirmPasswordVisible}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              style={styles.passwordInput}
-              autoCapitalize="none"
+              style={[
+                styles.input,
+                lastNameError ? styles.inputError : isLastNameValid ? styles.inputSuccess : null
+              ]}
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={handleLastNameChange}
+              autoCapitalize="words"
             />
-            <TouchableOpacity
-              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-              style={styles.eyeIcon}
-            >
-              <MaterialCommunityIcons
-                name={confirmPasswordVisible ? 'eye-off' : 'eye'}
-                size={24}
-                color="gray"
-              />
-            </TouchableOpacity>
+            {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
           </View>
 
-          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Register</Text>
+          {/* Email */}
+          <View>
+            <TextInput
+              style={[
+                styles.input,
+                emailError ? styles.inputError : isEmailValid ? styles.inputSuccess : null
+              ]}
+              placeholder="Email"
+              value={email}
+              onChangeText={handleEmailChange}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          </View>
+
+          {/* Username */}
+          <View>
+            <TextInput
+              style={[
+                styles.input,
+                usernameError ? styles.inputError : isUsernameValid ? styles.inputSuccess : null
+              ]}
+              placeholder="Username"
+              value={username}
+              onChangeText={handleUsernameChange}
+              autoCapitalize="none"
+            />
+            {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+          </View>
+
+          <View>
+            <View style={[
+              styles.inputContainer,
+              passwordError ? styles.inputError : isPasswordValid ? styles.inputSuccess : null
+            ]}>
+              <TextInput
+                placeholder="Password"
+                secureTextEntry={!passwordVisible}
+                value={password}
+                onChangeText={handlePasswordChange}
+                style={styles.passwordInput}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setPasswordVisible(!passwordVisible)}
+                style={styles.eyeIcon}
+              >
+                <MaterialCommunityIcons
+                  name={passwordVisible ? 'eye-off' : 'eye'}
+                  size={24}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+          </View>
+
+          <View>
+            <View style={[
+              styles.inputContainer,
+              confirmPasswordError ? styles.inputError : isConfirmPasswordValid ? styles.inputSuccess : null
+            ]}>
+              <TextInput
+                placeholder="Confirm password"
+                secureTextEntry={!confirmPasswordVisible}
+                value={confirmPassword}
+                onChangeText={handleConfirmPasswordChange}
+                style={styles.passwordInput}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                style={styles.eyeIcon}
+              >
+                <MaterialCommunityIcons
+                  name={confirmPasswordVisible ? 'eye-off' : 'eye'}
+                  size={24}
+                  color="gray"
+                />
+              </TouchableOpacity>
+            </View>
+            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+          </View>
+
+          <TouchableOpacity 
+            style={[
+              styles.registerButton,
+              (!isFirstNameValid || !isLastNameValid || !isEmailValid || 
+               !isUsernameValid || !isPasswordValid || !isConfirmPasswordValid || isLoading) 
+                ? styles.registerButtonDisabled : null
+            ]} 
+            onPress={handleRegister}
+            disabled={!isFirstNameValid || !isLastNameValid || !isEmailValid || 
+                     !isUsernameValid || !isPasswordValid || !isConfirmPasswordValid || isLoading}
+          >
+            <Text style={[
+              styles.buttonText,
+              (!isFirstNameValid || !isLastNameValid || !isEmailValid || 
+               !isUsernameValid || !isPasswordValid || !isConfirmPasswordValid || isLoading)
+                ? styles.buttonTextDisabled : null
+            ]}>
+              {isLoading ? 'Creating Account...' : 'Register'}
+            </Text>
           </TouchableOpacity>
 
           <Text style={styles.orText}>or Register with</Text>
@@ -132,7 +390,18 @@ export default function Register() {
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.socialButton}
-              onPress={() => router.push('/google-signin-email')}
+              onPress={async () => {
+                const res = await googleLogin();
+                if (res.success) {
+                  playSound('success');
+                  Alert.alert('Success', 'Logged in with Google', [
+                    { text: 'OK', onPress: () => router.replace('/welcomescreen') }
+                  ]);
+                } else if (res.error) {
+                  playSound('error');
+                  Alert.alert('Google Sign-In', res.error);
+                }
+              }}
             >
               <FontAwesome name="google" size={24} color="#DB4437" />
             </TouchableOpacity>
@@ -153,7 +422,7 @@ export default function Register() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E8D5F2', // Light violet background to complement logo
+    backgroundColor: '#E8D5F2',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -230,7 +499,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   registerButton: {
-    backgroundColor: '#6366F1', // Professional indigo
+    backgroundColor: '#8B5CF6', // Purple to match logo
     paddingVertical: isWeb ? 20 : 18,
     paddingHorizontal: isWeb ? 32 : 24,
     borderRadius: isWeb ? 14 : 12,
@@ -242,7 +511,7 @@ const styles = StyleSheet.create({
     minWidth: isWeb ? 320 : width * 0.75,
     maxWidth: isWeb ? 420 : width * 0.85,
     borderWidth: 0,
-    shadowColor: '#6366F1',
+    shadowColor: '#8B5CF6',
     shadowOffset: {
       width: 0,
       height: isWeb ? 8 : 4,
@@ -307,5 +576,29 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Validation styles
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  inputSuccess: {
+    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
+    marginBottom: 8,
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  buttonTextDisabled: {
+    color: '#6B7280',
   },
 });

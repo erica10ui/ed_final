@@ -59,7 +59,7 @@ export default function QuizQuestion2() {
       <View style={styles.answersContainer}>
         {answers.map((answer, index) => (
           <TouchableOpacity
-            key={index}
+            key={`q2-answer-${index}`}
             style={[
               styles.answerButton,
               selectedAnswer === answer && styles.answerButtonSelected
@@ -95,7 +95,7 @@ export default function QuizQuestion2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#E8D5F2',
     paddingHorizontal: 24,
     paddingTop: 60,
   },
@@ -142,7 +142,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8B5CF6',
     fontWeight: '500',
-    textDecorationLine: 'underline',
   },
   answerTextSelected: {
     color: '#7C3AED',

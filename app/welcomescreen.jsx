@@ -1,8 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useSound } from '../contexts/SoundContext';
 
 export default function WelcomeScreen() {
+  const { playSound } = useSound();
+
+  const handleGetStarted = () => {
+    playSound('success');
+    router.push('/onboarding-sleep-type');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to</Text>
@@ -11,7 +19,7 @@ export default function WelcomeScreen() {
         Personalized insomnia relief, just for you.
       </Text>
 
-      <TouchableOpacity style={styles.getStartedButton} onPress={() => router.push('/onboarding-sos-relief')}>
+      <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
         <Text style={styles.getStartedText}>Get Started</Text>
       </TouchableOpacity>
     </View>
@@ -23,7 +31,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#E8D5F2',
     paddingHorizontal: 24,
   },
   title: {

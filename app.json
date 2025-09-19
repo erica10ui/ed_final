@@ -1,10 +1,9 @@
 {
   "expo": {
-     "name": "Dreamflow",
+    "name": "Dreamflow",
     "slug": "Dreamflow",
     "version": "1.0.0",
-    "scheme":"Dreamflow",
-
+    "scheme": "Dreamflow",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -19,11 +18,13 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.dreamflow.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#E8D5F2"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "favicon": "./assets/logo.png"

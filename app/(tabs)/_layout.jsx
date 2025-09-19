@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const TabIcon = ({ name, color, size = 24 }) => (
-  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+  <View style={{ alignItems: 'center', justifyContent: 'center', width: 24, height: 24 }}>
     <MaterialCommunityIcons name={name} size={size} color={color} />
   </View>
 );
@@ -28,6 +28,9 @@ const TabsLayout = () => {
           fontSize: 12,
           fontWeight: '500',
         },
+        tabBarIconStyle: {
+          marginTop: 4,
+        },
       }}
     >
       <Tabs.Screen
@@ -43,7 +46,7 @@ const TabsLayout = () => {
         options={{
           title: 'Relax',
           headerShown: false,
-          tabBarIcon: ({ color }) => <TabIcon name="lotus" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="meditation" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -55,11 +58,19 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
+        name="music"
+        options={{
+          title: 'Music',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <TabIcon name="music" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Notifications',
           headerShown: false,
-          tabBarIcon: ({ color }) => <TabIcon name="account" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon name="bell" color={color} />,
         }}
       />
     </Tabs>
